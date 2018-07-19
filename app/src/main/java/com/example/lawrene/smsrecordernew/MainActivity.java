@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     Boolean state;
     HashMap<String, String> hashmap = new HashMap<>();
     String HttpURL = "http://www.caurix.net/smsRecorder.php";
+    SearchView searchView;
 
     List<SMSData> smsDataList = new ArrayList<>();
     List<SMSData> responseList = new ArrayList<>();
@@ -261,10 +262,15 @@ public class MainActivity extends AppCompatActivity {
         h.postDelayed(new Runnable() {
             public void run() {
                 //do something
-                getSMS();
 
-                updateRecords("", "");
-                getRequest();
+
+                if(searchView.isIconified()){
+                    getSMS();
+
+                    updateRecords("", "");
+                    getRequest();
+                }
+
 
                 Log.i("15", "60 seconds reached!");
                 runnable = this;
@@ -285,10 +291,12 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 //do something
 //                getRequest();
-                getSMS();
+                if(searchView.isIconified()){
+                    getSMS();
 
-                updateRecords("", "");
-                getRequest();
+                    updateRecords("", "");
+                    getRequest();
+                }
 
                 Log.i("60", "App paused!");
                 runnable = this;
@@ -386,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.app_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         //*** setOnQueryTextFocusChangeListener ***
         searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
 
