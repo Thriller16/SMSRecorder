@@ -1,6 +1,7 @@
 package com.example.lawrene.smsrecordernew;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     DatabaseAccess databaseAccess;
     String smsBody, smsSender, finalResult;
     HttpParse httpParse = new HttpParse();
+    ProgressDialog mProgressDialog;
     Boolean state;
     HashMap<String, String> hashmap = new HashMap<>();
     String HttpURL = "http://www.caurix.net/smsRecorder.php";
@@ -61,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         checkpermission();
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.show();
 
         databaseAccess = DatabaseAccess.getInstance(this);
         databaseAccess.open();
@@ -72,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(recordedAdapter);
 
         getRequest();
-
     }
 
     private void checkpermission() {
@@ -128,6 +131,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, String responseString) {
                 try {
+
+                    mProgressDialog.dismiss();
+                    responseList = new ArrayList<>();
+
+
                     JSONArray arr = new JSONArray(responseString);
                     for (int i = 0; i < arr.length(); i++) {
                         JSONObject eachObject = arr.getJSONObject(i);
@@ -225,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         smsDataList = databaseAccess.getSMS();
-        UpdateRecords updateRecords = new UpdateRecords();
 
         for(int j = 0; j < smsDataList.size(); j++ ){
 //                            SMSData smsData = smsDataList.get(j);
@@ -235,7 +242,8 @@ public class MainActivity extends AppCompatActivity {
             SMSData smsData = smsDataList.get(j);
 
             if(smsData.getStatus().equals("pending")){
-                updateRecords.execute(smsData.getNumber(), smsData.getBody());
+                UpdateRecords updateRecords = new UpdateRecords();
+                updateRecords.execute(smsData.getNumber(), parseSms(smsData.getBody()));
                 databaseAccess.updateStatus(smsData.getBody());
                 getRequest();
             }
@@ -256,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 getSMS();
 
                 updateRecords("", "");
-//                getRequest();
+                getRequest();
 
                 Log.i("15", "60 seconds reached!");
                 runnable = this;
@@ -280,6 +288,7 @@ public class MainActivity extends AppCompatActivity {
                 getSMS();
 
                 updateRecords("", "");
+                getRequest();
 
                 Log.i("60", "App paused!");
                 runnable = this;
@@ -362,9 +371,9 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
                 for (SMSData postDetail : arraylist) {
-                    if (charText.length() != 0 && postDetail.getNumber().toLowerCase(Locale.getDefault()).contains(charText)) {
+                    if (charText.length() != 0 && postDetail.getBody().toLowerCase(Locale.getDefault()).contains(charText)) {
                         parkingList.add(postDetail);
-                    } else if (charText.length() != 0 && postDetail.getNumber().toLowerCase(Locale.getDefault()).contains(charText)) {
+                    } else if (charText.length() != 0 && postDetail.getBody().toLowerCase(Locale.getDefault()).contains(charText)) {
                         parkingList.add(postDetail);
                     }
                 }
@@ -432,6 +441,19 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public String parseSms(String gottenSMS){
+        String smsMain = "";
+
+        StringTokenizer stringTokenizer = new StringTokenizer(gottenSMS, "*");
+        stringTokenizer.nextToken();
+
+        String client = stringTokenizer.nextToken();
+        String firstTwo = client.substring(0, 2);
+        smsMain = client;
+
+        return smsMain;
     }
 }
 
